@@ -9,6 +9,12 @@ class SchoolDiaryApp:
         self.db = db_connection
         self.user_data = user_data  # Store the user data
 
+
+    def start(self):
+        # Initialize the main screen frame
+        self.main_screen_frame = tk.Frame(self.root)
+        self.main_screen_frame.pack(fill="both", expand=True)
+
         self.root.title("Dziennik szkolny")
         self.root.geometry("1200x730")
         self.root.config(bg="lightgray")
@@ -18,21 +24,10 @@ class SchoolDiaryApp:
         self.current_view = None  # Track the current view for action buttons
         self.create_ui()
 
+
     def create_ui(self):
-        # Górny pasek menu
-        menu_bar = tk.Frame(self.root, relief="groove", bd=2, bg="white")
-        menu_bar.pack(side="top", fill="x")
-
-        # Display logged-in user info
-        kto_zalogowany = tk.Label(menu_bar, text=f"KTO ZALOGOWANY: {self.user_data['imie']} {self.user_data['nazwisko']}",
-                                  font=("Arial", 10), bg="white")
-        kto_zalogowany.pack(side="left", padx=10)
-
-        wyloguj = tk.Button(menu_bar, text="WYLOGUJ", font=("Arial", 10), fg="black", bg="white")
-        wyloguj.pack(side="right", padx=10)
-
-        # Toolbar
-        self.toolbar = tk.Frame(self.root, relief="raised", bd=2, bg="white")
+        # Toolbar (inside main_screen_frame)
+        self.toolbar = tk.Frame(self.main_screen_frame, relief="raised", bd=2, bg="white")
         self.toolbar.pack(side="top", fill="x", pady=5, padx=10)
 
         self.icons = {
@@ -51,7 +46,7 @@ class SchoolDiaryApp:
             )
             button.pack(side="left", padx=10, pady=5)
 
-        # Add school logo
+        # Add school logo (inside main_screen_frame)
         try:
             image = Image.open("szkola_image.png")
             image = image.resize((130, 65), Image.LANCZOS)
@@ -62,12 +57,12 @@ class SchoolDiaryApp:
         except Exception as e:
             print("Nie można załadować obrazu:", e)
 
-        # Scrollable main container
-        self.main_container = tk.Frame(self.root, bg="white")
+        # Scrollable main container (inside main_screen_frame)
+        self.main_container = tk.Frame(self.main_screen_frame, bg="white")
         self.main_container.pack(padx=10, pady=10, fill="both", expand=True)
 
-        # Footer
-        footer_frame = tk.Frame(self.root, bg="white", height=20)
+        # Footer (inside main_screen_frame)
+        footer_frame = tk.Frame(self.main_screen_frame, bg="white", height=20)
         footer_frame.pack(side="bottom", fill="x")
 
         footer_label = tk.Label(
@@ -78,9 +73,11 @@ class SchoolDiaryApp:
             fg="black"
         )
         footer_label.pack(side="top", pady=3, anchor="center")
-        self.add_action_buttons()
 
-        self.switch_view("lessons")  # Load the initial view
+        self.add_action_buttons()  # You may need to define this method or replace it as per your need
+
+        # Switch to the initial view (lessons)
+        self.switch_view("lessons")
 
     def switch_view(self, view_name):
         """
@@ -443,3 +440,12 @@ class SchoolDiaryApp:
 
     def edytuj_ucznia(self):
         print("Edytuj ucznia")
+
+    def hide_main_screen(self):
+        self.main_screen_frame.pack_forget()  # Destroy the login screen frame completely
+
+    def show_main_screen(self):
+        self.main_screen_frame.pack(fill="both", expand=True)  # Re-show the login screen
+
+    def set_user_data(self, user_data):
+        self.user_data = user_data

@@ -7,17 +7,14 @@ class LoginScreen:
         self.on_login_success = on_login_success  # This function is called on successful login
         self.db = db
 
+
+    def start(self):
         # Initialize the main login_frame
         self.login_frame = tk.Frame(self.root)
         self.login_frame.pack(fill="both", expand=True)
 
-        self.root.title("Login - Dziennik szkolny")
-        self.root.geometry("800x450")
-        self.root.config(bg="lightgray")
-
-        self.root.resizable(False, False)
-
         self.create_ui()
+
 
     def create_ui(self):
         # Create the main container with padding
@@ -71,4 +68,12 @@ class LoginScreen:
             print("Please enter email and password.")
 
     def hide_login_screen(self):
+        # Clear the email and password entries
+        self.email_entry.delete(0, tk.END)  # Clear email input
+        self.password_entry.delete(0, tk.END)  # Clear password input
+
+        # Hide the login frame
         self.login_frame.pack_forget()  # Destroy the login screen frame completely
+
+    def show_login_screen(self):
+        self.login_frame.pack(fill="both", expand=True)  # Re-show the login screen
