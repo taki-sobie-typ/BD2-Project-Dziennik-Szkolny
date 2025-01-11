@@ -82,8 +82,6 @@ class SchoolDiaryApp:
 
         self.switch_view("lessons")  # Load the initial view
 
-
-
     def switch_view(self, view_name):
         """
         Switch the main container's content based on the selected view.
@@ -102,7 +100,7 @@ class SchoolDiaryApp:
         elif view_name == "students":
             self.display_table(self.current_frame, "uczniowie")
         elif view_name == "notifications":
-            self.display_announcements(self.current_frame, "ogłoszeniaview")
+            self.display_announcements(self.current_frame, "ogłoszenieview")
         elif view_name == "grades":
             self.display_table(self.current_frame, "ocena_widok")
         else:
@@ -149,37 +147,135 @@ class SchoolDiaryApp:
         :param view_name: Name of the database view to fetch data from.
         """
         try:
+            # Fetch all data from the database view
             headers, data = self.db.fetch_all_from_view(view_name)
             if not data:
                 tk.Label(parent, text="Brak ogłoszeń do wyświetlenia.", font=("Arial", 10), bg="white").pack()
                 return
 
-            # Create a frame for announcements
-            announcements_frame = tk.Frame(parent, bg="white", width=600)
-            announcements_frame.pack(fill="both", expand=True, pady=10)
+            # Pagination settings
+            announcements_per_page = 3
+            total_pages = (len(data) + announcements_per_page - 1) // announcements_per_page  # Round up division
+            current_page = [0]  # Use a list to allow modification inside nested functions
 
-            for row in data:
-                title, description, date_added, author_first_name, author_last_name = row
-
-                # Create a frame for each announcement
-                announcement_frame = tk.Frame(announcements_frame, bg="white", bd=1, relief="solid", padx=10, pady=10)
-                announcement_frame.pack(fill="x", pady=5)
+            def show_announcement_popup(title, description, date_added, author_first_name, author_last_name):
+                """Display a popup window with detailed announcement."""
+                popup = tk.Toplevel(parent)
+                popup.title("Szczegóły ogłoszenia")
+                popup.geometry("500x400")
+                popup.configure(bg="#f9f9f9")  # Subtle background color
 
                 # Title
-                title_label = tk.Label(announcement_frame, text=title, font=("Arial", 12, "bold"), bg="white",
-                                       anchor="w")
-                title_label.pack(fill="x")
+                title_label = tk.Label(
+                    popup, text=title, font=("Arial", 14, "bold"), bg="#f9f9f9", anchor="center"
+                )
+                title_label.pack(fill="x", pady=(20, 10))
 
-                # Description
-                description_label = tk.Label(announcement_frame, text=description, font=("Arial", 10), bg="white",
-                                             anchor="w", wraplength=400)
-                description_label.pack(fill="x", pady=5)
+                # Description (limit to 255 characters)
+                description = description[:255]
+                description_label = tk.Label(
+                    popup,
+                    text=description,
+                    font=("Arial", 11),
+                    bg="#f9f9f9",
+                    anchor="center",
+                    wraplength=450,
+                    justify="center",
+                )
+                description_label.pack(fill="x", padx=20, pady=(20, 30))
 
                 # Date and Author
-                footer_label = tk.Label(announcement_frame,
-                                        text=f"Autor: {author_first_name} {author_last_name} | Data: {date_added}",
-                                        font=("Arial", 8), bg="white", anchor="w", fg="gray")
-                footer_label.pack(fill="x")
+                footer_label = tk.Label(
+                    popup,
+                    text=f"Autor: {author_first_name} {author_last_name} | Data: {date_added}",
+                    font=("Arial", 10),
+                    bg="#f9f9f9",
+                    fg="gray",
+                    anchor="center",
+                )
+                footer_label.pack(fill="x", pady=(0, 20))
+
+                # Close Button
+                close_button = tk.Button(
+                    popup, text="Zamknij", command=popup.destroy, bg="#d9d9d9", font=("Arial", 10)
+                )
+                close_button.pack(side="bottom", pady=20)
+
+            def show_page(page):
+                """Display the announcements for the specified page."""
+                # Clear parent frame
+                for widget in parent.winfo_children():
+                    widget.destroy()
+
+                # Calculate the range of announcements to display
+                start_index = page * announcements_per_page
+                end_index = start_index + announcements_per_page
+                page_data = data[start_index:end_index]
+
+                # Display announcements
+                for row in page_data:
+                    title, description, date_added, author_first_name, author_last_name = row
+
+                    # Create a frame for each announcement
+                    announcement_frame = tk.Frame(parent, bg="white", bd=1, relief="solid", padx=10, pady=10)
+                    announcement_frame.pack(fill="x", pady=5)
+
+                    # Title
+                    title_label = tk.Label(announcement_frame, text=title, font=("Arial", 12, "bold"), bg="white",
+                                           anchor="w")
+                    title_label.pack(fill="x")
+
+                    # Short description
+                    short_description = description[:100] + "..." if len(description) > 100 else description
+                    description_label = tk.Label(
+                        announcement_frame, text=short_description, font=("Arial", 10), bg="white", anchor="w",
+                        wraplength=500
+                    )
+                    description_label.pack(fill="x", pady=5)
+
+                    # Date and Author
+                    footer_label = tk.Label(
+                        announcement_frame,
+                        text=f"Autor: {author_first_name} {author_last_name} | Data: {date_added}",
+                        font=("Arial", 8), bg="white", anchor="w", fg="gray"
+                    )
+                    footer_label.pack(fill="x")
+
+                    # Expand button
+                    expand_button = tk.Button(
+                        announcement_frame,
+                        text="Rozwiń",
+                        command=lambda t=title, d=description, da=date_added, af=author_first_name, al=author_last_name:
+                        show_announcement_popup(t, d, da, af, al),
+                        bg="lightblue", font=("Arial", 10)
+                    )
+                    expand_button.pack(side="right", padx=5, pady=5)
+
+                # Navigation buttons
+                nav_frame = tk.Frame(parent, bg="white", pady=10)
+                nav_frame.pack(fill="x")
+
+                # Previous Page Button
+                if page > 0:
+                    prev_button = tk.Button(
+                        nav_frame, text="Poprzednia strona", command=lambda: show_page(page - 1), bg="lightgray"
+                    )
+                    prev_button.pack(side="left", padx=5)
+
+                # Page Indicator
+                page_label = tk.Label(nav_frame, text=f"Strona {page + 1} z {total_pages}", font=("Arial", 10),
+                                      bg="white")
+                page_label.pack(side="left", padx=5)
+
+                # Next Page Button
+                if page < total_pages - 1:
+                    next_button = tk.Button(
+                        nav_frame, text="Następna strona", command=lambda: show_page(page + 1), bg="lightgray"
+                    )
+                    next_button.pack(side="right", padx=5)
+
+            # Show the first page initially
+            show_page(current_page[0])
 
         except Exception as e:
             tk.Label(parent, text=f"Błąd: {e}", font=("Arial", 10), bg="white", fg="red").pack(pady=10)
