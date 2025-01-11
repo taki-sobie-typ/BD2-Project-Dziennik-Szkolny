@@ -5,7 +5,6 @@ from PIL import Image, ImageTk
 
 class SchoolDiaryApp:
     def __init__(self, root, db_connection):
-        self.main_container = None
         self.root = root
         self.db = db_connection
 
@@ -14,6 +13,7 @@ class SchoolDiaryApp:
         self.root.config(bg="gray")
 
         self.current_frame = None  # To track the currently displayed content
+        self.current_view = None  # Track the current view for action buttons
         self.create_ui()
 
     def create_ui(self):
@@ -37,7 +37,8 @@ class SchoolDiaryApp:
             "\U0001f514": "notifications",
             "\U0001f4c5": "calendar",
             "\u26a0": "warnings",
-            "\U0001f465": "students"
+            "\U0001f465": "students",
+            "\U0001F4DC": "grades"  # Ikona dla ocen
         }
         for icon, view in self.icons.items():
             button = tk.Button(
@@ -88,14 +89,21 @@ class SchoolDiaryApp:
         self.current_frame = tk.Frame(self.main_container, bg="white")
         self.current_frame.pack(fill="both", expand=True)
 
+        self.current_view = view_name  # Update the current view
+
         if view_name == "lessons":
             self.display_table(self.current_frame, "lekcjeview")
         elif view_name == "students":
             self.display_table(self.current_frame, "uczniowie")
         elif view_name == "notifications":
             self.display_announcements(self.current_frame, "ogłoszeniaview")
+        elif view_name == "grades":
+            self.display_table(self.current_frame, "ocena_widok")
         else:
             tk.Label(self.current_frame, text=f"View: {view_name} (W budowie)", bg="white").pack(pady=20)
+
+        # Add buttons at the bottom of the current frame
+        self.add_action_buttons()
 
     def display_table(self, parent, view_name):
         """
@@ -176,9 +184,32 @@ class SchoolDiaryApp:
         buttons_frame = tk.Frame(self.root, bg="gray")
         buttons_frame.pack(side="bottom", fill="x", pady=10)
 
-        btn1 = tk.Button(buttons_frame, text="Akcja 1", font=("Arial", 10), bg="white", command=self.action1)
-        btn2 = tk.Button(buttons_frame, text="Akcja 2", font=("Arial", 10), bg="white", command=self.action2)
-        btn3 = tk.Button(buttons_frame, text="Akcja 3", font=("Arial", 10), bg="white", command=self.action3)
+        # Clear the existing buttons
+        for widget in buttons_frame.winfo_children():
+            widget.destroy()
+
+        if self.current_view == "grades":
+            btn1 = tk.Button(buttons_frame, text="Dodaj ocenę", font=("Arial", 10), bg="white",
+                             command=self.dodaj_ocene)
+            btn2 = tk.Button(buttons_frame, text="Usuń ocenę", font=("Arial", 10), bg="white", command=self.usun_ocene)
+            btn3 = tk.Button(buttons_frame, text="Edytuj ocenę", font=("Arial", 10), bg="white",
+                             command=self.edytuj_ocene)
+        elif self.current_view == "lessons":
+            btn1 = tk.Button(buttons_frame, text="Dodaj lekcję", font=("Arial", 10), bg="white",
+                             command=self.dodaj_lekcje)
+            btn2 = tk.Button(buttons_frame, text="Usuń lekcję", font=("Arial", 10), bg="white",
+                             command=self.usun_lekcje)
+            btn3 = tk.Button(buttons_frame, text="Edytuj lekcję", font=("Arial", 10), bg="white",
+                             command=self.edytuj_lekcje)
+        elif self.current_view == "students":
+            btn1 = tk.Button(buttons_frame, text="Dodaj ucznia", font=("Arial", 10), bg="white",
+                             command=self.dodaj_ucznia)
+            btn2 = tk.Button(buttons_frame, text="Usuń ucznia", font=("Arial", 10), bg="white",
+                             command=self.usun_ucznia)
+            btn3 = tk.Button(buttons_frame, text="Edytuj ucznia", font=("Arial", 10), bg="white",
+                             command=self.edytuj_ucznia)
+        else:
+            btn1 = btn2 = btn3 = tk.Button(buttons_frame, text="Brak akcji", font=("Arial", 10), bg="white")
 
         btn1.pack(side="left", padx=5)
         btn2.pack(side="left", padx=5)
@@ -194,15 +225,35 @@ class SchoolDiaryApp:
             row_data = tree.item(selected_item, "values")
             print(f"Clicked row: {row_data}")  # Replace with edit functionality
 
-    def action1(self):
-        print("Akcja 1 wykonana")
+    # Action methods for "grades"
+    def dodaj_ocene(self):
+        print("Dodaj ocenę")
 
-    def action2(self):
-        print("Akcja 2 wykonana")
+    def usun_ocene(self):
+        print("Usuń ocenę")
 
-    def action3(self):
-        print("Akcja 3 wykonana")
+    def edytuj_ocene(self):
+        print("Edytuj ocenę")
 
+    # Action methods for "lessons"
+    def dodaj_lekcje(self):
+        print("Dodaj lekcję")
+
+    def usun_lekcje(self):
+        print("Usuń lekcję")
+
+    def edytuj_lekcje(self):
+        print("Edytuj lekcję")
+
+    # Action methods for "students"
+    def dodaj_ucznia(self):
+        print("Dodaj ucznia")
+
+    def usun_ucznia(self):
+        print("Usuń ucznia")
+
+    def edytuj_ucznia(self):
+        print("Edytuj ucznia")
 
 # Run the application
 if __name__ == "__main__":
