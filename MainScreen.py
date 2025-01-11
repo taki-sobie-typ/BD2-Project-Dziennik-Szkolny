@@ -82,6 +82,8 @@ class SchoolDiaryApp:
 
         self.switch_view("lessons")  # Load the initial view
 
+
+
     def switch_view(self, view_name):
         """
         Switch the main container's content based on the selected view.
@@ -108,6 +110,7 @@ class SchoolDiaryApp:
 
         # Add buttons at the bottom of the current frame
         self.add_action_buttons()
+
 
     def display_table(self, parent, view_name):
         """
@@ -182,16 +185,19 @@ class SchoolDiaryApp:
             tk.Label(parent, text=f"Błąd: {e}", font=("Arial", 10), bg="white", fg="red").pack(pady=10)
 
     def add_action_buttons(self):
-        """
-        Add buttons at the bottom of the current frame for actions.
-        """
-        buttons_frame = tk.Frame(self.root, bg="gray")
-        buttons_frame.pack(side="bottom", fill="x", pady=10)
+        # Find the existing buttons frame (assuming it was already created)
+        buttons_frame = self.main_container.winfo_children()[0] if self.main_container.winfo_children() else None
 
-        # Clear the existing buttons
-        for widget in buttons_frame.winfo_children():
-            widget.destroy()
+        # If the buttons frame exists, clear it
+        if buttons_frame:
+            for widget in buttons_frame.winfo_children():
+                widget.destroy()
+        else:
+            # If no buttons_frame exists, create one
+            buttons_frame = tk.Frame(self.main_container, bg="lightgray")
+            buttons_frame.pack(side="bottom", fill="x", pady=10)
 
+        # Add buttons based on the current view
         if self.current_view == "grades":
             btn1 = tk.Button(buttons_frame, text="Dodaj ocenę", font=("Arial", 10), bg="white",
                              command=self.dodaj_ocene)
@@ -213,8 +219,10 @@ class SchoolDiaryApp:
             btn3 = tk.Button(buttons_frame, text="Edytuj ucznia", font=("Arial", 10), bg="white",
                              command=self.edytuj_ucznia)
         else:
+            # Default fallback button if no actions are available
             btn1 = btn2 = btn3 = tk.Button(buttons_frame, text="Brak akcji", font=("Arial", 10), bg="white")
 
+        # Pack the buttons horizontally with some padding
         btn1.pack(side="left", padx=5)
         btn2.pack(side="left", padx=5)
         btn3.pack(side="left", padx=5)
