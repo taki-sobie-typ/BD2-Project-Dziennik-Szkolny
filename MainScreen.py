@@ -5,6 +5,7 @@ from PIL import Image, ImageTk
 
 class SchoolDiaryApp:
     def __init__(self, root, db_connection):
+        self.main_container = None
         self.root = root
         self.db = db_connection
 
@@ -72,6 +73,7 @@ class SchoolDiaryApp:
             fg="black"
         )
         footer_label.pack(side="top", pady=3, anchor="center")
+        self.add_action_buttons()
 
         self.switch_view("lessons")  # Load the initial view
 
@@ -87,14 +89,13 @@ class SchoolDiaryApp:
         self.current_frame.pack(fill="both", expand=True)
 
         if view_name == "lessons":
-            self.display_table(self.current_frame, "lekcje")
+            self.display_table(self.current_frame, "lekcjeview")
         elif view_name == "students":
             self.display_table(self.current_frame, "uczniowie")
+        elif view_name == "notifications":
+            self.display_announcements(self.current_frame, "ogłoszeniaview")
         else:
             tk.Label(self.current_frame, text=f"View: {view_name} (W budowie)", bg="white").pack(pady=20)
-
-        # Add buttons at the bottom of the current frame
-        self.add_action_buttons()
 
     def display_table(self, parent, view_name):
         """
@@ -126,11 +127,53 @@ class SchoolDiaryApp:
         except Exception as e:
             tk.Label(parent, text=f"Błąd: {e}", font=("Arial", 10), bg="white", fg="red").pack(pady=10)
 
+    def display_announcements(self, parent, view_name):
+        """
+        Display announcements from a database view in a formatted layout.
+        :param parent: Parent frame to display the announcements.
+        :param view_name: Name of the database view to fetch data from.
+        """
+        try:
+            headers, data = self.db.fetch_all_from_view(view_name)
+            if not data:
+                tk.Label(parent, text="Brak ogłoszeń do wyświetlenia.", font=("Arial", 10), bg="white").pack()
+                return
+
+            # Create a frame for announcements
+            announcements_frame = tk.Frame(parent, bg="white", width=600)
+            announcements_frame.pack(fill="both", expand=True, pady=10)
+
+            for row in data:
+                title, description, date_added, author_first_name, author_last_name = row
+
+                # Create a frame for each announcement
+                announcement_frame = tk.Frame(announcements_frame, bg="white", bd=1, relief="solid", padx=10, pady=10)
+                announcement_frame.pack(fill="x", pady=5)
+
+                # Title
+                title_label = tk.Label(announcement_frame, text=title, font=("Arial", 12, "bold"), bg="white",
+                                       anchor="w")
+                title_label.pack(fill="x")
+
+                # Description
+                description_label = tk.Label(announcement_frame, text=description, font=("Arial", 10), bg="white",
+                                             anchor="w", wraplength=400)
+                description_label.pack(fill="x", pady=5)
+
+                # Date and Author
+                footer_label = tk.Label(announcement_frame,
+                                        text=f"Autor: {author_first_name} {author_last_name} | Data: {date_added}",
+                                        font=("Arial", 8), bg="white", anchor="w", fg="gray")
+                footer_label.pack(fill="x")
+
+        except Exception as e:
+            tk.Label(parent, text=f"Błąd: {e}", font=("Arial", 10), bg="white", fg="red").pack(pady=10)
+
     def add_action_buttons(self):
         """
         Add buttons at the bottom of the current frame for actions.
         """
-        buttons_frame = tk.Frame(self.current_frame, bg="white")
+        buttons_frame = tk.Frame(self.root, bg="gray")
         buttons_frame.pack(side="bottom", fill="x", pady=10)
 
         btn1 = tk.Button(buttons_frame, text="Akcja 1", font=("Arial", 10), bg="white", command=self.action1)
@@ -165,7 +208,7 @@ class SchoolDiaryApp:
 if __name__ == "__main__":
     from DataBaseConnect import DatabaseConnection
 
-    db = DatabaseConnection(user="szkolaAdmin", password="strongpassword", host="localhost", database="szkola")
+    db = DatabaseConnection(user="root", password="", host="localhost", database="szkola")
     db.connect()
 
     root = tk.Tk()
