@@ -16,6 +16,30 @@ class DatabaseConnection:
         self.database = database
         self.connection = None
 
+    def connect2(self):
+        """Connect to the database."""
+        self.connection = mysql.connector.connect(
+            user=self.user, password=self.password, host=self.host, database=self.database
+        )
+        self.cursor = self.connection.cursor()
+
+    def execute_query(self, query, params=None):
+        """Execute a SELECT query and return the results."""
+        self.cursor.execute(query, params or ())
+        return self.cursor.fetchall()
+
+    def execute_update(self, query, params=None):
+        """Execute an update query (INSERT, UPDATE, DELETE)."""
+        self.cursor.execute(query, params or ())
+        self.connection.commit()
+
+    def close(self):
+        """Close the database connection."""
+        if self.cursor:
+            self.cursor.close()
+        if self.connection:
+            self.connection.close()
+
     def connect(self):
         """
         Establish a connection to the database and initialize the cursor.

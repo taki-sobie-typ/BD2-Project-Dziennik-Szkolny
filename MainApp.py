@@ -26,7 +26,7 @@ class MainApp:
         user_level = user_data.get('user_level')
 
         if user_level == 3:  # Administrator
-            self.db = DatabaseConnection(user="szkolaAdmin", password="strongpassword", host="localhost", database="szkola")
+            self.db = DatabaseConnection(user="root", password="", host="localhost", database="szkola")
         elif user_level == 2:  # Teacher
             self.db = DatabaseConnection(user="nauczyciel", password="strongpassword", host="localhost", database="szkola")
         elif user_level == 1:  # Parent
