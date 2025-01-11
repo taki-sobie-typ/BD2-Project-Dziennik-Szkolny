@@ -1,8 +1,6 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 from PIL import Image, ImageTk
-from datetime import datetime
-from Ocena import *
 
 
 class SchoolDiaryApp:
@@ -10,10 +8,9 @@ class SchoolDiaryApp:
         self.root = root
         self.db = db_connection
         self.user_data = user_data  # Store the user data
-        self.ocena = Ocena(db_connection, user_data)
 
         self.root.title("Dziennik szkolny")
-        self.root.geometry("1500x700")
+        self.root.geometry("1200x700")
         self.root.config(bg="lightgray")
         self.root.resizable(False, False)
 
@@ -105,7 +102,7 @@ class SchoolDiaryApp:
         elif view_name == "students":
             self.display_table(self.current_frame, "uczniowie")
         elif view_name == "notifications":
-            self.display_announcements(self.current_frame, "ogłoszenieview")
+            self.display_announcements(self.current_frame, "ogłoszeniaview")
         elif view_name == "grades":
             self.display_table(self.current_frame, "ocena_widok")
         else:
@@ -242,8 +239,7 @@ class SchoolDiaryApp:
 
     # Action methods for "grades"
     def dodaj_ocene(self):
-        print("Dodaj ocene")
-        self.ocena.dodaj_ocene()
+        print("Dodaj ocenę")
 
     def usun_ocene(self):
         print("Usuń ocenę")
