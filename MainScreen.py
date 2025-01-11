@@ -266,16 +266,3 @@ class SchoolDiaryApp:
 
     def edytuj_ucznia(self):
         print("Edytuj ucznia")
-
-# Run the application
-if __name__ == "__main__":
-    from DataBaseConnect import DatabaseConnection
-
-    db = DatabaseConnection(user="root", password="", host="localhost", database="szkola")
-    db.connect()
-
-    root = tk.Tk()
-    app = SchoolDiaryApp(root, db)
-    root.mainloop()
-
-    db.close()
