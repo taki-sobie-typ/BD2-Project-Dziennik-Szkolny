@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+from Ocena import *
 
 
 class SchoolDiaryApp:
@@ -8,6 +9,7 @@ class SchoolDiaryApp:
         self.root = root
         self.db = db_connection
         self.user_data = user_data  # Store the user data
+        self.ocena = Ocena(db_connection, user_data)
 
 
     def start(self):
@@ -16,7 +18,7 @@ class SchoolDiaryApp:
         self.main_screen_frame.pack(fill="both", expand=True)
 
         self.root.title("Dziennik szkolny")
-        self.root.geometry("1200x730")
+        self.root.geometry("1200x700")
         self.root.config(bg="lightgray")
         self.root.resizable(False, False)
 
@@ -79,6 +81,8 @@ class SchoolDiaryApp:
         # Switch to the initial view (lessons)
         self.switch_view("lessons")
 
+
+
     def switch_view(self, view_name):
         """
         Switch the main container's content based on the selected view.
@@ -97,7 +101,7 @@ class SchoolDiaryApp:
         elif view_name == "students":
             self.display_table(self.current_frame, "uczniowie")
         elif view_name == "notifications":
-            self.display_announcements(self.current_frame, "ogłoszenieview")
+            self.display_announcements(self.current_frame, "ogłoszeniaview")
         elif view_name == "grades":
             self.display_table(self.current_frame, "ocena_widok")
         else:
@@ -144,214 +148,37 @@ class SchoolDiaryApp:
         :param view_name: Name of the database view to fetch data from.
         """
         try:
-            # Fetch all data from the database view
             headers, data = self.db.fetch_all_from_view(view_name)
             if not data:
                 tk.Label(parent, text="Brak ogłoszeń do wyświetlenia.", font=("Arial", 10), bg="white").pack()
                 return
 
-            # Pagination settings
-            announcements_per_page = 3
-            total_pages = (len(data) + announcements_per_page - 1) // announcements_per_page  # Round up division
-            current_page = [0]  # Use a list to allow modification inside nested functions
-            selected_announcements = set()  # Track selected announcements for deletion
+            # Create a frame for announcements
+            announcements_frame = tk.Frame(parent, bg="white", width=600)
+            announcements_frame.pack(fill="both", expand=True, pady=10)
 
-            def show_announcement_popup(title, description, date_added, author_first_name, author_last_name):
-                """Display a popup window with detailed announcement."""
-                popup = tk.Toplevel(parent)
-                popup.title("Szczegóły ogłoszenia")
-                popup.geometry("500x400")
-                popup.configure(bg="#f9f9f9")  # Subtle background color
+            for row in data:
+                title, description, date_added, author_first_name, author_last_name = row
+
+                # Create a frame for each announcement
+                announcement_frame = tk.Frame(announcements_frame, bg="white", bd=1, relief="solid", padx=10, pady=10)
+                announcement_frame.pack(fill="x", pady=5)
 
                 # Title
-                title_label = tk.Label(
-                    popup, text=title, font=("Arial", 14, "bold"), bg="#f9f9f9", anchor="center"
-                )
-                title_label.pack(fill="x", pady=(20, 10))
+                title_label = tk.Label(announcement_frame, text=title, font=("Arial", 12, "bold"), bg="white",
+                                       anchor="w")
+                title_label.pack(fill="x")
 
-                # Description (limit to 255 characters)
-                description = description[:255]
-                description_label = tk.Label(
-                    popup,
-                    text=description,
-                    font=("Arial", 11),
-                    bg="#f9f9f9",
-                    anchor="center",
-                    wraplength=450,
-                    justify="center",
-                )
-                description_label.pack(fill="x", padx=20, pady=(20, 30))
+                # Description
+                description_label = tk.Label(announcement_frame, text=description, font=("Arial", 10), bg="white",
+                                             anchor="w", wraplength=400)
+                description_label.pack(fill="x", pady=5)
 
                 # Date and Author
-                footer_label = tk.Label(
-                    popup,
-                    text=f"Autor: {author_first_name} {author_last_name} | Data: {date_added}",
-                    font=("Arial", 10),
-                    bg="#f9f9f9",
-                    fg="gray",
-                    anchor="center",
-                )
-                footer_label.pack(fill="x", pady=(0, 20))
-
-                # Close Button
-                close_button = tk.Button(
-                    popup, text="Zamknij", command=popup.destroy, bg="#d9d9d9", font=("Arial", 10)
-                )
-                close_button.pack(side="bottom", pady=20)
-
-            def delete_selected_announcements():
-                """Delete selected announcements from the database."""
-                if not selected_announcements:
-                    print("No announcements selected for deletion.")
-                    return
-                # Delete logic, assuming you have a delete method in your DB class
-                self.db.delete_announcements(list(selected_announcements))
-                print(f"Deleted announcements: {selected_announcements}")
-                selected_announcements.clear()
-                show_page(current_page[0])  # Refresh the page after deletion
-
-            def add_new_announcement():
-                """Display a popup window for adding a new announcement."""
-                popup = tk.Toplevel(parent)
-                popup.title("Dodaj ogłoszenie")
-                popup.geometry("600x450")  # Increased window size
-                popup.configure(bg="#f9f9f9")
-
-                # Title input
-                title_label = tk.Label(popup, text="Tytuł:", font=("Arial", 16), bg="#f9f9f9")
-                title_label.pack(pady=(20, 5), anchor="w", padx=20)  # Left-align and add padding
-                title_entry = tk.Entry(popup, font=("Arial", 16), width=50)  # Increased width
-                title_entry.pack(pady=10, padx=20)
-
-                # Description input
-                description_label = tk.Label(popup, text="Opis:", font=("Arial", 16), bg="#f9f9f9")
-                description_label.pack(pady=10, anchor="w", padx=20)  # Left-align and add padding
-                description_entry = tk.Text(popup, font=("Arial", 16), width=50, height=8)  # Larger text area
-                description_entry.pack(pady=10, padx=20)
-
-                def add_announcement_to_db():
-                    """Add the new announcement to the database."""
-                    title = title_entry.get()
-                    description = description_entry.get("1.0", tk.END).strip()
-                    if not title or not description:
-                        print("Title and description cannot be empty.")
-                        return
-                    # Add logic, assuming you have an add method in your DB class
-                    self.db.add_announcement(title, description)
-                    print(f"Added new announcement: {title}")
-                    popup.destroy()
-                    show_page(current_page[0])  # Refresh the page after adding
-
-                # Add Button
-                add_button = tk.Button(popup, text="Dodaj", command=add_announcement_to_db, bg="lightgreen",
-                                       font=("Arial", 16))
-                add_button.pack(pady=20)
-
-            def show_page(page):
-                """Display the announcements for the specified page."""
-                # Clear parent frame
-                for widget in parent.winfo_children():
-                    widget.destroy()
-
-                # Calculate the range of announcements to display
-                start_index = page * announcements_per_page
-                end_index = start_index + announcements_per_page
-                page_data = data[start_index:end_index]
-
-                # Display announcements
-                for index, row in enumerate(page_data):
-                    title, description, date_added, author_first_name, author_last_name = row
-
-                    # Create a frame for each announcement
-                    announcement_frame = tk.Frame(parent, bg="white", bd=1, relief="solid", padx=10, pady=10)
-                    announcement_frame.pack(fill="x", pady=5)
-
-                    # Title with checkbox
-                    title_frame = tk.Frame(announcement_frame, bg="white")
-                    title_frame.pack(fill="x")
-
-                    # Checkbox for deletion
-                    checkbox_var = tk.BooleanVar()
-                    checkbox = tk.Checkbutton(
-                        title_frame, variable=checkbox_var, bg="white", selectcolor="lightgray",
-                        command=lambda idx=index, var=checkbox_var: toggle_selection(idx, var)
-                    )
-                    checkbox.pack(side="left", padx=5)
-
-                    # Title Label
-                    title_label = tk.Label(title_frame, text=title, font=("Arial", 12, "bold"), bg="white", anchor="w")
-                    title_label.pack(fill="x", side="left")
-
-                    # Short description
-                    short_description = description[:100] + "..." if len(description) > 100 else description
-                    description_label = tk.Label(
-                        announcement_frame, text=short_description, font=("Arial", 10), bg="white", anchor="w",
-                        wraplength=500
-                    )
-                    description_label.pack(fill="x", pady=5)
-
-                    # Date and Author
-                    footer_label = tk.Label(
-                        announcement_frame,
-                        text=f"Autor: {author_first_name} {author_last_name} | Data: {date_added}",
-                        font=("Arial", 8), bg="white", anchor="w", fg="gray"
-                    )
-                    footer_label.pack(fill="x")
-
-                    # Expand button
-                    expand_button = tk.Button(
-                        announcement_frame,
-                        text="Rozwiń",
-                        command=lambda t=title, d=description, da=date_added, af=author_first_name, al=author_last_name:
-                        show_announcement_popup(t, d, da, af, al),
-                        bg="lightblue", font=("Arial", 10)
-                    )
-                    expand_button.pack(side="right", padx=5, pady=5)
-
-                # Navigation buttons
-                nav_frame = tk.Frame(parent, bg="white", pady=10)
-                nav_frame.pack(fill="x")
-
-                # Previous Page Button
-                if page > 0:
-                    prev_button = tk.Button(
-                        nav_frame, text="Poprzednia strona", command=lambda: show_page(page - 1), bg="lightgray"
-                    )
-                    prev_button.pack(side="left", padx=5)
-
-                # Page Indicator
-                page_label = tk.Label(nav_frame, text=f"Strona {page + 1} z {total_pages}", font=("Arial", 10),
-                                      bg="white")
-                page_label.pack(side="left", padx=5)
-
-                # Next Page Button
-                if page < total_pages - 1:
-                    next_button = tk.Button(
-                        nav_frame, text="Następna strona", command=lambda: show_page(page + 1), bg="lightgray"
-                    )
-                    next_button.pack(side="right", padx=5)
-
-                # Add Announcement Button
-                add_button = tk.Button(
-                    nav_frame, text="Dodaj ogłoszenie", command=add_new_announcement, bg="lightblue"
-                )
-                add_button.pack(side="right", padx=5)
-
-                # Delete Selected Button
-                delete_button = tk.Button(
-                    nav_frame, text="Usuń wybrane", command=delete_selected_announcements, bg="lightcoral"
-                )
-                delete_button.pack(side="right", padx=5)
-
-            def toggle_selection(announcement_index, checkbox_var):
-                """Toggle the selection of an announcement for deletion."""
-                if checkbox_var.get():
-                    selected_announcements.add(announcement_index)
-                else:
-                    selected_announcements.discard(announcement_index)
-
-            # Show the first page initially
-            show_page(current_page[0])
+                footer_label = tk.Label(announcement_frame,
+                                        text=f"Autor: {author_first_name} {author_last_name} | Data: {date_added}",
+                                        font=("Arial", 8), bg="white", anchor="w", fg="gray")
+                footer_label.pack(fill="x")
 
         except Exception as e:
             tk.Label(parent, text=f"Błąd: {e}", font=("Arial", 10), bg="white", fg="red").pack(pady=10)
@@ -390,8 +217,6 @@ class SchoolDiaryApp:
                              command=self.usun_ucznia)
             btn3 = tk.Button(buttons_frame, text="Edytuj ucznia", font=("Arial", 10), bg="white",
                              command=self.edytuj_ucznia)
-        elif self.current_view == "notifications":
-                return
         else:
             # Default fallback button if no actions are available
             btn1 = btn2 = btn3 = tk.Button(buttons_frame, text="Brak akcji", font=("Arial", 10), bg="white")
@@ -414,6 +239,7 @@ class SchoolDiaryApp:
     # Action methods for "grades"
     def dodaj_ocene(self):
         print("Dodaj ocenę")
+        self.ocena.dodaj_ocene()
 
     def usun_ocene(self):
         print("Usuń ocenę")
