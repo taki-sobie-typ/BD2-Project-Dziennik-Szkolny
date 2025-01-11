@@ -1,6 +1,5 @@
 import mysql.connector
 
-
 class DatabaseConnection:
     def __init__(self, user, password, host="localhost", database="szkola"):
         """
@@ -10,6 +9,7 @@ class DatabaseConnection:
         :param host: The MySQL server host (default is 'localhost').
         :param database: The MySQL database name.
         """
+        self.cursor = None
         self.host = host
         self.user = user
         self.password = password
@@ -18,7 +18,7 @@ class DatabaseConnection:
 
     def connect(self):
         """
-        Establish a connection to the database.
+        Establish a connection to the database and initialize the cursor.
         """
         try:
             self.connection = mysql.connector.connect(
@@ -28,14 +28,18 @@ class DatabaseConnection:
                 database=self.database
             )
             print(f"Connection established for user '{self.user}'.")
+            self.cursor = self.connection.cursor()  # Initialize the cursor after connection
         except mysql.connector.Error as err:
             print(f"Error: {err}")
             self.connection = None
+            self.cursor = None  # Ensure the cursor is set to None if connection fails
 
     def close(self):
         """
-        Close the database connection.
+        Close the database connection and cursor.
         """
+        if self.cursor:
+            self.cursor.close()  # Close the cursor explicitly
         if self.connection:
             self.connection.close()
             print(f"Connection for user '{self.user}' closed.")
@@ -46,51 +50,85 @@ class DatabaseConnection:
         :param view_name: Name of the database view.
         :return: Tuple (headers, results) where headers is a list of column names, and results is a list of rows.
         """
-        if not self.connection:
-            raise Exception("Database connection is not established.")
+        if not self.connection or not self.cursor:
+            raise Exception("Database connection or cursor is not established.")
 
-        cursor = self.connection.cursor()
         try:
             query = f"SELECT * FROM {view_name}"  # Query to fetch all rows from the view
-            cursor.execute(query)
-            results = cursor.fetchall()  # Fetch all results
-            headers = [desc[0] for desc in cursor.description]  # Extract column headers
+            self.cursor.execute(query)
+            results = self.cursor.fetchall()  # Fetch all results
+            headers = [desc[0] for desc in self.cursor.description]  # Extract column headers
             return headers, results
         except mysql.connector.Error as err:
             print(f"Error executing query on view {view_name}: {err}")
             return [], []
-        finally:
-            cursor.close()
 
-# Example usage
-if __name__ == "__main__":
-    # Define credentials for different users
-    users = {
-        "admin": {"user": "szkolaAdmin", "password": "strongpassword"},
-        "teacher": {"user": "nauczyciel", "password": "strongpassword"},
-        "parent": {"user": "rodzic", "password": "strongpassword"},
-        "student": {"user": "uczen", "password": "strongpassword"},
-    }
+    def validate_user(self, email, password):
+        """
+        Validate user credentials and return user data.
+        :param email: The email of the user.
+        :param password: The password of the user.
+        :return: Dictionary with user data if valid, else None.
+        """
+        if not self.cursor:
+            raise Exception("Cursor is not initialized.")
 
-    # Test connection with each user
-    for role, creds in users.items():
-        print(f"\nConnecting as {role}...")
-        db = DatabaseConnection(user=creds["user"], password=creds["password"])
-        db.connect()
+        query = """
+                SELECT u.id_uzytkownik , u.email, u.haslo , uc.uczen_id, uc.dane_osobowe_id, do.imie, do.nazwisko
+                FROM uzytkownik u
+                JOIN uczen uc ON u.id_uzytkownik = uc.uczen_id
+                JOIN dane_osobowe do ON uc.dane_osobowe_id = do.id_dane_osobowe
+                WHERE u.email = %s AND u.haslo = %s
+                """
+        self.cursor.execute(query, (email, password))
+        result = self.cursor.fetchone()
 
-        try:
-            # Fetch data from a view based on the user's role
-            if role == "admin":
-                data = db.fetch_all_from_view("lekcje")
-            elif role == "teacher":
-                data = db.fetch_all_from_view("lekcje_nauczyciela")
-            elif role == "parent":
-                data = db.fetch_all_from_view("lekcje_rodzica")
-            elif role == "student":
-                data = db.fetch_all_from_view("lekcje_ucznia")
+        if result:
+            # User data from uzytkownik table
+            user_data = {
+                'user_id': result[0],
+                'uczen_id': result[3],
+                'dane_osobowe_id': result[4],
+                'imie': result[5],
+                'nazwisko': result[6]
+            }
 
-            print(f"{role.capitalize()} data:")
-            for record in data:
-                print(record)
-        finally:
-            db.close()
+            # Check for user level (priority: administrator > nauczyciel > rodzic > uczen)
+            user_level = -1
+
+            # Check in administrator table
+            self.cursor.execute("SELECT 1 FROM administrator WHERE id_uzytkownik = %s", (user_data['user_id'],))
+            if self.cursor.fetchone():
+                user_level = 3  # Administrator
+                user_data['user_level'] = user_level
+                # Return user data with the correct user level for administrator
+                return user_data
+
+            # Check in nauczyciel table
+            self.cursor.execute("SELECT 1 FROM nauczyciel WHERE id_uzytkownik = %s", (user_data['user_id'],))
+            if self.cursor.fetchone():
+                user_level = 2  # Teacher
+                user_data['user_level'] = user_level
+                # Return user data with the correct user level for teacher
+                return user_data
+
+            # Check in rodzic table
+            self.cursor.execute("SELECT 1 FROM rodzic WHERE id_uzytkownik = %s", (user_data['user_id'],))
+            if self.cursor.fetchone():
+                user_level = 1  # Parent
+                user_data['user_level'] = user_level
+                # Return user data with the correct user level for parent
+                return user_data
+
+            # Check in uczen table
+            self.cursor.execute("SELECT 1 FROM uczen WHERE id_uzytkownik = %s", (user_data['user_id'],))
+            if self.cursor.fetchone():
+                user_level = 0  # Student
+                user_data['user_level'] = user_level
+                # Return user data with the correct user level for student
+                return user_data
+
+            # If no match found, return None
+            return None
+        else:
+            return None

@@ -4,13 +4,15 @@ from PIL import Image, ImageTk
 
 
 class SchoolDiaryApp:
-    def __init__(self, root, db_connection):
+    def __init__(self, root, db_connection, user_data):
         self.root = root
         self.db = db_connection
+        self.user_data = user_data  # Store the user data
 
         self.root.title("Dziennik szkolny")
-        self.root.geometry("750x700")
-        self.root.config(bg="gray")
+        self.root.geometry("1200x700")
+        self.root.config(bg="lightgray")
+        self.root.resizable(False, False)
 
         self.current_frame = None  # To track the currently displayed content
         self.create_ui()
@@ -20,7 +22,9 @@ class SchoolDiaryApp:
         menu_bar = tk.Frame(self.root, relief="groove", bd=2, bg="white")
         menu_bar.pack(side="top", fill="x")
 
-        kto_zalogowany = tk.Label(menu_bar, text="KTO ZALOGOWANY (Imię i nazwisko)", font=("Arial", 10), bg="white")
+        # Display logged-in user info
+        kto_zalogowany = tk.Label(menu_bar, text=f"KTO ZALOGOWANY: {self.user_data['imie']} {self.user_data['nazwisko']}",
+                                  font=("Arial", 10), bg="white")
         kto_zalogowany.pack(side="left", padx=10)
 
         wyloguj = tk.Button(menu_bar, text="WYLOGUJ", font=("Arial", 10), fg="black", bg="white")
@@ -51,7 +55,7 @@ class SchoolDiaryApp:
             image = image.resize((130, 65), Image.LANCZOS)
             logo = ImageTk.PhotoImage(image)
             logo_label = tk.Label(self.toolbar, image=logo, bg="white")
-            logo_label.pack(side="left", padx=10)
+            logo_label.pack(side="right", padx=10)
             logo_label.image = logo
         except Exception as e:
             print("Nie można załadować obrazu:", e)
@@ -87,9 +91,9 @@ class SchoolDiaryApp:
         self.current_frame.pack(fill="both", expand=True)
 
         if view_name == "lessons":
-            self.display_table(self.current_frame, "lekcje")
+            self.display_table(self.current_frame, "lekcjeview")
         elif view_name == "students":
-            self.display_table(self.current_frame, "uczniowie")
+            self.display_table(self.current_frame, "uczen")
         else:
             tk.Label(self.current_frame, text=f"View: {view_name} (W budowie)", bg="white").pack(pady=20)
 
@@ -159,17 +163,3 @@ class SchoolDiaryApp:
 
     def action3(self):
         print("Akcja 3 wykonana")
-
-
-# Run the application
-if __name__ == "__main__":
-    from DataBaseConnect import DatabaseConnection
-
-    db = DatabaseConnection(user="szkolaAdmin", password="strongpassword", host="localhost", database="szkola")
-    db.connect()
-
-    root = tk.Tk()
-    app = SchoolDiaryApp(root, db)
-    root.mainloop()
-
-    db.close()
