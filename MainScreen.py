@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+from Ocena import *
 
 
 class SchoolDiaryApp:
@@ -8,6 +9,7 @@ class SchoolDiaryApp:
         self.root = root
         self.db = db_connection
         self.user_data = user_data  # Store the user data
+        self.ocena = Ocena(db_connection, user_data)
 
         self.root.title("Dziennik szkolny")
         self.root.geometry("1200x700")
@@ -240,6 +242,7 @@ class SchoolDiaryApp:
     # Action methods for "grades"
     def dodaj_ocene(self):
         print("Dodaj ocenę")
+        self.ocena.dodaj_ocene()
 
     def usun_ocene(self):
         print("Usuń ocenę")
