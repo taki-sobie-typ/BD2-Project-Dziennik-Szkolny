@@ -36,7 +36,8 @@ class SchoolDiaryApp:
             "\U0001f514": "notifications",
             "\U0001f4c5": "calendar",
             "\u26a0": "warnings",
-            "\U0001f465": "students"
+            "\U0001f465": "students",
+            "\U0001F4DC": "grades"  # Ikona dla ocen
         }
         for icon, view in self.icons.items():
             button = tk.Button(
@@ -90,6 +91,8 @@ class SchoolDiaryApp:
             self.display_table(self.current_frame, "lekcje")
         elif view_name == "students":
             self.display_table(self.current_frame, "uczniowie")
+        elif view_name == "grades":
+            self.display_table(self.current_frame, "ocena_widok")
         else:
             tk.Label(self.current_frame, text=f"View: {view_name} (W budowie)", bg="white").pack(pady=20)
 
@@ -165,7 +168,7 @@ class SchoolDiaryApp:
 if __name__ == "__main__":
     from DataBaseConnect import DatabaseConnection
 
-    db = DatabaseConnection(user="szkolaAdmin", password="strongpassword", host="localhost", database="szkola")
+    db = DatabaseConnection(user="root", password="", host="localhost", database="szkola")
     db.connect()
 
     root = tk.Tk()
