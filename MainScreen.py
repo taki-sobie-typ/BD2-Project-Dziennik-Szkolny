@@ -11,6 +11,7 @@ class SchoolDiaryApp:
         self.user_data = user_data  # Store the user data
         self.ocena = Ocena(db_connection, user_data)
         self.selected_grade_id = None
+        self.row_data = None
 
 
     def start(self):
@@ -238,6 +239,7 @@ class SchoolDiaryApp:
         if selected_item:
             row_data = tree.item(selected_item, "values")
             self.selected_grade_id = row_data[0]
+            self.row_data = row_data
             print(f"Clicked row: {row_data}")  # Replace with edit functionality
 
     # Action methods for "grades"
@@ -257,7 +259,7 @@ class SchoolDiaryApp:
 
     def edytuj_ocene(self):
         print("Edytuj ocenę")
-
+        self.ocena.edytuj_ocene(self.row_data)
     # Action methods for "lessons"
     def dodaj_lekcje(self):
         print("Dodaj lekcję")
