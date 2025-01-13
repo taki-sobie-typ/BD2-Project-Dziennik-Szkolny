@@ -29,6 +29,7 @@ class MainApp:
         # Set user data
         self.user_data = user_data
         user_level = user_data.get('user_level')
+        self.main_screen = SchoolDiaryApp(self.root, self.db, self.user_data) #Dodałem bo się user_data nie aktualizował w ocenie (jak ktoś ma lepszy pomysł to zmienić)
 
         # Update the database connection based on the user level
         if user_level == 3:  # Administrator

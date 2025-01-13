@@ -9,6 +9,29 @@ class Ocena:
         self.db = db_connection
         self.user_data = user_data
 
+    def delete_grade(self, grade_id):
+        """
+        Usuwa ocenę na podstawie ID oceny.
+        :param grade_id: ID oceny do usunięcia.
+        """
+        try:
+            # Sprawdzanie, czy ocena istnieje
+            existing_grade = self.db.execute_query(
+                "SELECT * FROM ocena WHERE ocena_id = %s", (grade_id,)
+            )
+            if not existing_grade:
+                print(f"Ocena o ID {grade_id} nie istnieje.")
+                return
+
+            # Usuwanie oceny
+            self.db.execute_update(
+                "DELETE FROM ocena WHERE ocena_id = %s", (grade_id,)
+            )
+            print(f"Ocena o ID {grade_id} została pomyślnie usunięta.")
+        except Exception as e:
+            print(f"Wystąpił błąd podczas usuwania oceny: {e}")
+        print("Ocena została usunięta!")
+
     def dodaj_ocene(self):
         print("Dodaj ocenę")
         # Tworzymy okno wyskakujące (popup)
@@ -102,7 +125,7 @@ class Ocena:
         # Zwiększanie increment_id o 1
         increment_id += 1
 
-        teacher_id = self.user_data.get("dane_osobowe_id")
+        teacher_id = self.user_data.get("user_id")
         # teacher_first_name = self.user_data.get("imie")
         # teacher_last_name = self.user_data.get("nazwisko")
         # teacher = f"{teacher_first_name} {teacher_last_name}"

@@ -10,6 +10,7 @@ class SchoolDiaryApp:
         self.db = db_connection
         self.user_data = user_data  # Store the user data
         self.ocena = Ocena(db_connection, user_data)
+        self.selected_grade_id = None
 
 
     def start(self):
@@ -226,6 +227,8 @@ class SchoolDiaryApp:
         btn2.pack(side="left", padx=5)
         btn3.pack(side="left", padx=5)
 
+    global grade_id
+
     def on_row_click(self, tree):
         """
         Handle a row click in the table.
@@ -234,6 +237,7 @@ class SchoolDiaryApp:
         selected_item = tree.selection()
         if selected_item:
             row_data = tree.item(selected_item, "values")
+            self.selected_grade_id = row_data[0]
             print(f"Clicked row: {row_data}")  # Replace with edit functionality
 
     # Action methods for "grades"
@@ -243,6 +247,13 @@ class SchoolDiaryApp:
 
     def usun_ocene(self):
         print("Usuń ocenę")
+        if self.selected_grade_id is None:
+            print("Nie wybrano oceny do usunięcia.")
+            return
+
+        self.ocena.delete_grade(self.selected_grade_id)
+        self.selected_grade_id = None
+
 
     def edytuj_ocene(self):
         print("Edytuj ocenę")
