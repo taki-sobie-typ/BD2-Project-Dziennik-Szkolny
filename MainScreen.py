@@ -744,6 +744,8 @@ class SchoolDiaryApp:
 
     def edytuj_lekcje(self):
         print("Edytuj lekcję")
+        print(self.row_data)
+        self.lekcja.edit_lesson(self.row_data)
 
     # Action methods for "students"
     def dodaj_ucznia(self):
