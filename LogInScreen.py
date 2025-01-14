@@ -1,4 +1,5 @@
 import tkinter as tk
+import bcrypt as bcrypt
 from PIL import Image, ImageTk
 
 class LoginScreen:
@@ -57,7 +58,14 @@ class LoginScreen:
         # Check if the email and password are not empty
         if email and password:
             # Validate user credentials from the database
+
+            # salt = bcrypt.gensalt()
+            #hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+            #password = hashed_password.decode('utf-8')  # Store as a string
+            #print(password)
+
             user_data = self.db.validate_user(email, password)
+
             if user_data:
                 # If login is successful, pass the necessary user data to the main app
                 self.on_login_success(user_data)
@@ -77,3 +85,4 @@ class LoginScreen:
 
     def show_login_screen(self):
         self.login_frame.pack(fill="both", expand=True)  # Re-show the login screen
+

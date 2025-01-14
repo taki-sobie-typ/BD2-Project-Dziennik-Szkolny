@@ -13,6 +13,23 @@ class SchoolDiaryApp:
         self.selected_grade_id = None
         self.row_data = None
 
+        self.icons = {
+            "\u2709": "messages",
+            "\U0001f393": "lessons",
+            "\U0001f514": "notifications",
+            "\U0001f4c5": "calendar",
+            "\U0001f465": "users",
+            "\U0001F4DC": "grades"  # Icon for grades
+        }
+
+        # Define available icons for each user level
+        self.icon_sets = {
+            3: ["\u2709", "\U0001f393", "\U0001f514", "\U0001f4c5", "\U0001F4DC", "\U0001f465"],  # Administrator
+            2: ["\u2709", "\U0001f393", "\U0001f514", "\U0001f4c5", "\U0001F4DC"],  # Teacher
+            1: ["\u2709", "\U0001f514", "\U0001f465", "\U0001F4DC"],  # Parent
+            0: ["\u2709", "\U0001f514", "\U0001f465", "\U0001F4DC"],  # Student
+        }
+
 
     def start(self):
         # Initialize the main screen frame
@@ -33,17 +50,13 @@ class SchoolDiaryApp:
         self.toolbar = tk.Frame(self.main_screen_frame, relief="raised", bd=2, bg="white")
         self.toolbar.pack(side="top", fill="x", pady=5, padx=10)
 
-        self.icons = {
-            "\u2709": "messages",
-            "\U0001f393": "lessons",
-            "\U0001f514": "notifications",
-            "\U0001f4c5": "calendar",
-            "\U0001f465": "students",
-            "\U0001F4DC": "grades"  # Ikona dla ocen
-        }
-        for icon, view in self.icons.items():
+        allowed_icons = self.icon_sets.get(self.user_data.get("user_level"), [])
+
+        for icon_unicode in allowed_icons:
+            view = self.icons.get(icon_unicode)  # Get the view corresponding to the icon
+
             button = tk.Button(
-                self.toolbar, text=icon, font=("Arial", 14), width=6, height=3,
+                self.toolbar, text=icon_unicode, font=("Arial", 14), width=6, height=3,
                 fg="black", bg="white", command=lambda v=view: self.switch_view(v)
             )
             button.pack(side="left", padx=10, pady=5)
@@ -98,7 +111,7 @@ class SchoolDiaryApp:
 
         if view_name == "lessons":
             self.display_table(self.current_frame, "lekcjeview")
-        elif view_name == "students":
+        elif view_name == "users":
             self.display_table(self.current_frame, "uczniowie")
         elif view_name == "notifications":
             self.display_announcements(self.current_frame, "ogłoszenieview")
@@ -655,7 +668,7 @@ class SchoolDiaryApp:
                 widget.destroy()
         else:
             # If no buttons_frame exists, create one
-            buttons_frame = tk.Frame(self.main_container, bg="lightgray")
+            buttons_frame = tk.Frame(self.main_container, bg="white")
             buttons_frame.pack(side="bottom", fill="x", pady=10)
 
         # Add buttons based on the current view

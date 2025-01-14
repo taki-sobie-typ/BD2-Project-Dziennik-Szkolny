@@ -1,3 +1,4 @@
+import bcrypt
 import mysql.connector
 
 class DatabaseConnection:
@@ -198,63 +199,66 @@ class DatabaseConnection:
         if not self.cursor:
             raise Exception("Cursor is not initialized.")
 
-        query = """
-                SELECT u.id_uzytkownik , u.email, u.haslo , uc.uczen_id, uc.dane_osobowe_id, do.imie, do.nazwisko
+        validateQuery = """
+                SELECT u.id_uzytkownik , u.email, u.haslo , u.id_dane_osobowe, do.imie, do.nazwisko
                 FROM uzytkownik u
-                JOIN uczen uc ON u.id_uzytkownik = uc.uczen_id
-                JOIN dane_osobowe do ON uc.dane_osobowe_id = do.id_dane_osobowe
-                WHERE u.email = %s AND u.haslo = %s
+                JOIN dane_osobowe do ON u.id_dane_osobowe = do.id_dane_osobowe
+                WHERE u.email = %s
                 """
-        self.cursor.execute(query, (email, password))
+        self.cursor.execute(validateQuery, (email,))
         result = self.cursor.fetchone()
 
         if result:
-            # User data from uzytkownik table
-            user_data = {
-                'user_id': result[0],
-                'uczen_id': result[3],
-                'dane_osobowe_id': result[4],
-                'imie': result[5],
-                'nazwisko': result[6]
-            }
+            storedHash = result[2]
 
-            # Check for user level (priority: administrator > nauczyciel > rodzic > uczen)
-            user_level = -1
+            if bcrypt.checkpw(password.encode('utf-8'), storedHash.encode('utf-8')):
 
-            # Check in administrator table
-            self.cursor.execute("SELECT 1 FROM administrator WHERE id_uzytkownik = %s", (user_data['user_id'],))
-            if self.cursor.fetchone():
-                user_level = 3  # Administrator
-                user_data['user_level'] = user_level
-                # Return user data with the correct user level for administrator
-                return user_data
+                # User data from uzytkownik table
+                user_data = {
+                    'user_id': result[0],
+                    'uczen_id': result[0],
+                    'dane_osobowe_id': result[3],
+                    'imie': result[4],
+                    'nazwisko': result[5]
+                }
 
-            # Check in nauczyciel table
-            self.cursor.execute("SELECT 1 FROM nauczyciel WHERE id_uzytkownik = %s", (user_data['user_id'],))
-            if self.cursor.fetchone():
-                user_level = 2  # Teacher
-                user_data['user_level'] = user_level
-                # Return user data with the correct user level for teacher
-                return user_data
+                # Check for user level (priority: administrator > nauczyciel > rodzic > uczen)
+                user_level = -1
 
-            # Check in rodzic table
-            self.cursor.execute("SELECT 1 FROM rodzic WHERE id_uzytkownik = %s", (user_data['user_id'],))
-            if self.cursor.fetchone():
-                user_level = 1  # Parent
-                user_data['user_level'] = user_level
-                # Return user data with the correct user level for parent
-                return user_data
+                # Check in administrator table
+                self.cursor.execute("SELECT 1 FROM administrator WHERE id_uzytkownik = %s", (user_data['user_id'],))
+                if self.cursor.fetchone():
+                    user_level = 3  # Administrator
+                    user_data['user_level'] = user_level
+                    # Return user data with the correct user level for administrator
+                    return user_data
 
-            # Check in uczen table
-            self.cursor.execute("SELECT 1 FROM uczen WHERE id_uzytkownik = %s", (user_data['user_id'],))
-            if self.cursor.fetchone():
-                user_level = 0  # Student
-                user_data['user_level'] = user_level
-                # Return user data with the correct user level for student
-                return user_data
+                # Check in nauczyciel table
+                self.cursor.execute("SELECT 1 FROM nauczyciel WHERE id_uzytkownik = %s", (user_data['user_id'],))
+                if self.cursor.fetchone():
+                    user_level = 2  # Teacher
+                    user_data['user_level'] = user_level
+                    # Return user data with the correct user level for teacher
+                    return user_data
 
-            # If no match found, return None
-            return None
+                # Check in rodzic table
+                self.cursor.execute("SELECT 1 FROM rodzic WHERE id_uzytkownik = %s", (user_data['user_id'],))
+                if self.cursor.fetchone():
+                    user_level = 1  # Parent
+                    user_data['user_level'] = user_level
+                    # Return user data with the correct user level for parent
+                    return user_data
+
+                # Check in uczen table
+                self.cursor.execute("SELECT 1 FROM uczen WHERE id_uzytkownik = %s", (user_data['user_id'],))
+                if self.cursor.fetchone():
+                    user_level = 0  # Student
+                    user_data['user_level'] = user_level
+                    # Return user data with the correct user level for student
+                    return user_data
+
+                # If no match found, return None
+                return None
         else:
             return None
 
