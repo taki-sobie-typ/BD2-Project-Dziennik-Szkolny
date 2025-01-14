@@ -57,8 +57,8 @@ class Ocena:
         )
         self.subject_combobox.grid(row=0, column=1, padx=10, pady=5)
         # Ustawienie domyślnego przedmiotu
-        current_subject = next((s[1] for s in subjects if s[0] == przedmiot_id), "")
-        self.subject_combobox.set(current_subject)
+        #current_subject = next((s[1] for s in subjects if s[0] == przedmiot_id), "")
+        self.subject_combobox.set(przedmiot_id)
 
         student_label = tk.Label(edit_grade_window, text="Uczeń:")
         student_label.grid(row=1, column=0, padx=10, pady=5, sticky="e")
@@ -68,8 +68,8 @@ class Ocena:
         )
         self.student_combobox.grid(row=1, column=1, padx=10, pady=5)
         # Ustawienie domyślnego ucznia
-        current_student = next((f"{s[0]} {s[1]}" for s in students if s[2] == uczen_id), "")
-        self.student_combobox.set(current_student)
+        #current_student = next((f"{s[0]} {s[1]}" for s in students if s[2] == uczen_id), "")
+        self.student_combobox.set(uczen_id)
 
         grade_label = tk.Label(edit_grade_window, text="Ocena:")
         grade_label.grid(row=2, column=0, padx=10, pady=5, sticky="e")
