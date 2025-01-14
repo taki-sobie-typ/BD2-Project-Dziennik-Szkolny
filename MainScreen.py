@@ -750,17 +750,18 @@ class SchoolDiaryApp:
         self.lekcja.dodaj_lekcje()
 
 
-    def usun_lekcje(self):
+    def usun_lekcje(self): #Do poprawy!!!!!!!!
         print("Usuń lekcję")
-        if self.selected_lesson_id is None:
+        if self.row_data is None:
             print("Nie wybrano lekcji do usunięcia.")
             return
 
-        self.lekcja.delete_lesson(self.selected_lesson_id)
+        self.lekcja.delete_lesson(self.row_data)
         self.selected_grade_id = None
 
     def edytuj_lekcje(self):
         print("Edytuj lekcję")
+        self.lekcja.edit_lesson(self.row_data)
 
     # Action methods for "students"
     def dodaj_ucznia(self):
