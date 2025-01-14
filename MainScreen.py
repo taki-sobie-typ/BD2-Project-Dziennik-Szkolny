@@ -1,7 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+
+from Lekcja import Lekcja
 from Ocena import *
+from tkcalendar import DateEntry
+from datetime import datetime, timedelta
 
 
 class SchoolDiaryApp:
@@ -10,7 +14,9 @@ class SchoolDiaryApp:
         self.db = db_connection
         self.user_data = user_data  # Store the user data
         self.ocena = Ocena(db_connection, user_data)
+        self.lekcja = Lekcja(db_connection, user_data)
         self.selected_grade_id = None
+        self.selected_lesson_id = None
         self.row_data = None
 
         self.icons = {
@@ -119,6 +125,9 @@ class SchoolDiaryApp:
             self.display_table(self.current_frame, "ocena_widok")
         elif view_name == "messages":
             self.display_messages(self.current_frame)
+        elif view_name == "calendar":
+            self.display_schedule(self.current_frame)
+
         else:
             tk.Label(self.current_frame, text=f"View: {view_name} (W budowie)", bg="white").pack(pady=20)
 
@@ -714,6 +723,7 @@ class SchoolDiaryApp:
         if selected_item:
             row_data = tree.item(selected_item, "values")
             self.selected_grade_id = row_data[0]
+            self.selected_lesson_id = row_data[1]
             self.row_data = row_data
             print(f"Clicked row: {row_data}")  # Replace with edit functionality
 
@@ -738,9 +748,17 @@ class SchoolDiaryApp:
     # Action methods for "lessons"
     def dodaj_lekcje(self):
         print("Dodaj lekcję")
+        self.lekcja.dodaj_lekcje()
+
 
     def usun_lekcje(self):
         print("Usuń lekcję")
+        if self.selected_lesson_id is None:
+            print("Nie wybrano lekcji do usunięcia.")
+            return
+
+        self.lekcja.delete_lesson(self.selected_lesson_id)
+        self.selected_grade_id = None
 
     def edytuj_lekcje(self):
         print("Edytuj lekcję")
@@ -763,3 +781,103 @@ class SchoolDiaryApp:
 
     def set_user_data(self, user_data):
         self.user_data = user_data
+
+    def display_schedule(self, parent_frame):
+        """
+        Wyświetl widok kalendarza z planem zajęć na podstawie wybranej daty.
+        :param parent_frame: Rodzic dla komponentów kalendarza.
+        """
+        class_list = self.db.get_classes_list()
+
+        # Aktualna klasa i data wybrana przez użytkownika
+        self.selected_class = tk.StringVar(value="1A")
+        self.start_date = tk.StringVar(value=datetime.now().strftime("%Y-%m-%d"))
+
+        def update_schedule():
+            # Pobranie zajęć dla wybranej klasy
+            selected_class_name = self.selected_class.get()
+            # Zmieniamy start_date na datetime obiekt
+            start_date = datetime.strptime(self.start_date.get(), "%Y-%m-%d")
+
+            # Pobieramy plan zajęć z bazy danych dla wybranej klasy i daty
+            filtered_schedule = self.db.get_classes(selected_class_name, start_date)
+
+            # Renderowanie zajęć
+            render_schedule(filtered_schedule, start_date)
+
+        # Combobox dla wyboru klasy
+        tk.Label(parent_frame, text="Wybierz klasę:", font=("Arial", 12), bg="white").pack(pady=5, anchor="w")
+        class_combobox = ttk.Combobox(parent_frame, textvariable=self.selected_class, values=list(class_list),
+                                      state="readonly", font=("Arial", 12))
+        class_combobox.pack(pady=5, anchor="w")
+        class_combobox.bind("<<ComboboxSelected>>", lambda e: update_schedule())
+
+        # DateEntry dla wyboru daty
+        tk.Label(parent_frame, text="Wybierz datę początkową:", font=("Arial", 12), bg="white").pack(pady=5, anchor="w")
+        date_entry = DateEntry(parent_frame, textvariable=self.start_date, date_pattern="yyyy-MM-dd",
+                               font=("Arial", 12))
+        date_entry.pack(pady=5, anchor="w")
+        date_entry.bind("<<DateEntrySelected>>", lambda e: update_schedule())
+
+        # Ramka na kalendarz
+        calendar_frame = tk.Frame(parent_frame, bg="white")
+        calendar_frame.pack(fill="both", expand=True, pady=10)
+
+        day_names_map = {
+            "Mon": "Pon",
+            "Tue": "Wt",
+            "Wed": "Śr",
+            "Thu": "Czw",
+            "Fri": "Pt",
+            "Sat": "Sob",
+            "Sun": "Ndz"
+        }
+
+        def render_schedule(schedule, start_date):
+            # Wyczyść poprzedni harmonogram
+            for widget in calendar_frame.winfo_children():
+                widget.destroy()
+
+            # Utworzenie nagłówków kolumn na 5 kolejnych dni z nazwami dni tygodnia
+            days = [(start_date + timedelta(days=i)) for i in range(5)]  # 5 dni od start_date
+            for col, day in enumerate(days):
+                day_name = day.strftime("%a")  # Pobieramy angielski skrót dnia tygodnia
+                day_name_polish = day_names_map.get(day_name, day_name)  # Tłumaczymy na polski
+                header = tk.Label(calendar_frame, text=f"{day.strftime('%Y-%m-%d')}\n{day_name_polish}",
+                                  font=("Arial", 12, "bold"), bg="lightblue", width=15, height=2)
+                header.grid(row=0, column=col, sticky="nsew", padx=5, pady=5)
+
+            # Grupowanie zajęć według daty
+            day_schedules = {day.strftime("%Y-%m-%d"): [] for day in days}
+
+            # Uzupełnianie planu zajęć według daty
+            for lesson_date, lessons in schedule.items():
+                if lesson_date in day_schedules:
+                    for godzina_rozpoczecia, przedmiot in lessons:
+                        day_schedules[lesson_date].append((godzina_rozpoczecia, przedmiot))
+
+            # Wyświetlanie zajęć w kalendarzu
+            for day, lessons in day_schedules.items():
+                for lesson in lessons:
+                    godzina_rozpoczecia, przedmiot = lesson
+                    # Formatowanie godziny w odpowiedni sposób (jeśli jest w formacie HH:MM:SS, możemy usunąć sekundy)
+                    godzina_str = godzina_rozpoczecia[:5]  # Usuwamy sekundy, jeżeli istnieją
+
+                    lesson_text = f"{godzina_str}\n{przedmiot}"
+                    lesson_label = tk.Label(calendar_frame, text=lesson_text, font=("Arial", 10), bg="white",
+                                            relief="solid", wraplength=100)
+
+                    # Określamy wiersz (począwszy od 1) dla każdego przedmiotu w tym dniu
+                    lesson_label.grid(row=lessons.index(lesson) + 1,
+                                      column=days.index(datetime.strptime(day, "%Y-%m-%d")),
+                                      sticky="nsew", padx=5, pady=5)
+
+            # Dodanie rozciągania kolumn
+            for col in range(len(days)):
+                calendar_frame.columnconfigure(col, weight=1)
+
+        # Renderowanie początkowego harmonogramu
+        update_schedule()
+
+
+

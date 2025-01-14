@@ -1,6 +1,10 @@
 import bcrypt
 import mysql.connector
 
+from tkcalendar import DateEntry
+from datetime import datetime, timedelta
+from datetime import date as d
+
 class DatabaseConnection:
     def __init__(self, user, password, host="localhost", database="szkola"):
         """
@@ -367,3 +371,74 @@ class DatabaseConnection:
         except mysql.connector.Error as err:
             print(f"Error sending message: {err}")
             self.connection.rollback()  # Rollback in case of an error
+
+    def get_classes_list(self):
+        """
+        Pobiera listę klas z bazy danych.
+        :return: Lista nazw klas.
+        """
+        if not self.cursor:
+            raise Exception("Cursor is not initialized.")
+
+        try:
+            query = """SELECT nazwa_klasy FROM szkola.klasa;"""
+            self.cursor.execute(query)
+            result = self.cursor.fetchall()  # Pobieramy wszystkie wiersze wyniku
+            return [row[0] for row in result]  # Zwracamy tylko nazwy klas jako listę
+        except Exception as e:
+            print(f"Błąd podczas pobierania listy klas: {e}")
+            return []  # Zwracamy pustą listę w razie błędu
+
+    def get_classes(self, selected_class, starting_date):
+        if not self.cursor:
+            raise Exception("Cursor is not initialized.")
+
+        try:
+            if isinstance(starting_date, str):
+                starting_date = datetime.strptime(starting_date, "%Y-%m-%d")
+            # Calculate the next 4 days from the starting date
+            dates = [starting_date.strftime("%Y-%m-%d")]
+            for i in range(1, 5):
+                next_day = (starting_date + timedelta(days=i)).strftime("%Y-%m-%d")
+                dates.append(next_day)
+
+            # SQL Query
+            query = """
+                SELECT g.godzina, p.nazwa_przedmiotu, l.data
+                FROM klasa k
+                LEFT JOIN lekcje l ON k.klasa_id = l.klasa_id
+                LEFT JOIN przedmiot p ON l.przedmiot_id = p.przedmiot_id
+                LEFT JOIN godziny g ON l.godzinygodzina_id = g.godzina_id
+                WHERE k.nazwa_klasy = %s
+                AND l.data IN (%s, %s, %s, %s, %s)
+                ORDER BY l.data, g.godzina
+            """
+
+            # Execute query
+            self.cursor.execute(query, (selected_class, *dates))
+            result = self.cursor.fetchall()  # Get all rows
+
+            # Group results by date
+            schedule = {date: [] for date in dates}
+            for row in result:
+                godzina, nazwa_przedmiotu, data = row
+
+                # Ensure the time is in string format
+                godzina_str = godzina.strftime("%H:%M") if isinstance(godzina, datetime) else str(godzina)
+
+                # Convert 'data' to string
+                date_str = data.strftime("%Y-%m-%d") if isinstance(data, datetime) else str(data)
+
+                # Add to the schedule
+                schedule[date_str].append((godzina_str, nazwa_przedmiotu))
+
+            return schedule
+
+        except Exception as e:
+            print(f"Error fetching class schedule: {e}")
+            return []  # Return empty list on error
+
+
+
+
+
