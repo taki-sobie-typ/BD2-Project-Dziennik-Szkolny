@@ -118,7 +118,7 @@ class SchoolDiaryApp:
         if view_name == "lessons":
             self.display_table(self.current_frame, "lekcjeview")
         elif view_name == "students":
-            self.panel_administratora()
+            self.panel_administratora(self.current_frame)
         elif view_name == "notifications":
             self.display_announcements(self.current_frame, "ogłoszenieview")
         elif view_name == "grades":
@@ -880,9 +880,10 @@ class SchoolDiaryApp:
         # Renderowanie początkowego harmonogramu
         update_schedule()
 
-    def panel_administratora(self):
+    def panel_administratora(self, current_frame):
+
         # Create a frame inside the panel for the buttons
-        panel_frame = tk.Frame(self.main_container, bg="white")
+        panel_frame = tk.Frame(self.current_frame, bg="white")
         panel_frame.pack(fill="both", expand=True)
 
         # Create a container (sub-frame) for the buttons to center them horizontally but position them higher
