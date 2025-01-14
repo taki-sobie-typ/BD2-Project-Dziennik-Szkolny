@@ -680,37 +680,30 @@ class SchoolDiaryApp:
             buttons_frame = tk.Frame(self.main_container, bg="lightgray")
             buttons_frame.pack(side="bottom", fill="x", pady=10)
 
-        # Add buttons based on the current view
-        if self.current_view == "grades":
-            btn1 = tk.Button(buttons_frame, text="Dodaj ocenę", font=("Arial", 10), bg="white",
-                             command=self.dodaj_ocene)
-            btn2 = tk.Button(buttons_frame, text="Usuń ocenę", font=("Arial", 10), bg="white", command=self.usun_ocene)
-            btn3 = tk.Button(buttons_frame, text="Edytuj ocenę", font=("Arial", 10), bg="white",
-                             command=self.edytuj_ocene)
-        elif self.current_view == "lessons":
-            btn1 = tk.Button(buttons_frame, text="Dodaj lekcję", font=("Arial", 10), bg="white",
-                             command=self.dodaj_lekcje)
-            btn2 = tk.Button(buttons_frame, text="Usuń lekcję", font=("Arial", 10), bg="white",
-                             command=self.usun_lekcje)
-            btn3 = tk.Button(buttons_frame, text="Edytuj lekcję", font=("Arial", 10), bg="white",
-                             command=self.edytuj_lekcje)
-        elif self.current_view == "students":
-            btn1 = tk.Button(buttons_frame, text="Dodaj ucznia", font=("Arial", 10), bg="white",
-                             command=self.dodaj_ucznia)
-            btn2 = tk.Button(buttons_frame, text="Usuń ucznia", font=("Arial", 10), bg="white",
-                             command=self.usun_ucznia)
-            btn3 = tk.Button(buttons_frame, text="Edytuj ucznia", font=("Arial", 10), bg="white",
-                             command=self.edytuj_ucznia)
-        elif self.current_view == "notifications":
-                return
-        else:
-            # Default fallback button if no actions are available
-            btn1 = btn2 = btn3 = tk.Button(buttons_frame, text="Brak akcji", font=("Arial", 10), bg="white")
+        if(self.user_data.get("user_level")>1):
+            # Add buttons based on the current view
+            if self.current_view == "grades":
+                btn1 = tk.Button(buttons_frame, text="Dodaj ocenę", font=("Arial", 10), bg="white",
+                                 command=self.dodaj_ocene)
+                btn2 = tk.Button(buttons_frame, text="Usuń ocenę", font=("Arial", 10), bg="white", command=self.usun_ocene)
+                btn3 = tk.Button(buttons_frame, text="Edytuj ocenę", font=("Arial", 10), bg="white",
+                                 command=self.edytuj_ocene)
+                # Pack the buttons horizontally with some padding
+                btn1.pack(side="left", padx=5)
+                btn2.pack(side="left", padx=5)
+                btn3.pack(side="left", padx=5)
+            elif self.current_view == "lessons":
+                btn1 = tk.Button(buttons_frame, text="Dodaj lekcję", font=("Arial", 10), bg="white",
+                                 command=self.dodaj_lekcje)
+                btn2 = tk.Button(buttons_frame, text="Usuń lekcję", font=("Arial", 10), bg="white",
+                                 command=self.usun_lekcje)
+                btn3 = tk.Button(buttons_frame, text="Edytuj lekcję", font=("Arial", 10), bg="white",
+                                 command=self.edytuj_lekcje)
+                # Pack the buttons horizontally with some padding
+                btn1.pack(side="left", padx=5)
+                btn2.pack(side="left", padx=5)
+                btn3.pack(side="left", padx=5)
 
-        # Pack the buttons horizontally with some padding
-        btn1.pack(side="left", padx=5)
-        btn2.pack(side="left", padx=5)
-        btn3.pack(side="left", padx=5)
 
     global grade_id
 
