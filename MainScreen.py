@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
+
+from Lekcja import Lekcja
 from Ocena import *
 
 
@@ -10,7 +12,9 @@ class SchoolDiaryApp:
         self.db = db_connection
         self.user_data = user_data  # Store the user data
         self.ocena = Ocena(db_connection, user_data)
+        self.lekcja = Lekcja(db_connection, user_data)
         self.selected_grade_id = None
+        self.selected_lesson_id = None
         self.row_data = None
 
 
@@ -701,6 +705,7 @@ class SchoolDiaryApp:
         if selected_item:
             row_data = tree.item(selected_item, "values")
             self.selected_grade_id = row_data[0]
+            self.selected_lesson_id = row_data[1]
             self.row_data = row_data
             print(f"Clicked row: {row_data}")  # Replace with edit functionality
 
@@ -725,9 +730,17 @@ class SchoolDiaryApp:
     # Action methods for "lessons"
     def dodaj_lekcje(self):
         print("Dodaj lekcję")
+        self.lekcja.dodaj_lekcje()
+
 
     def usun_lekcje(self):
         print("Usuń lekcję")
+        if self.selected_lesson_id is None:
+            print("Nie wybrano lekcji do usunięcia.")
+            return
+
+        self.lekcja.delete_lesson(self.selected_lesson_id)
+        self.selected_grade_id = None
 
     def edytuj_lekcje(self):
         print("Edytuj lekcję")
