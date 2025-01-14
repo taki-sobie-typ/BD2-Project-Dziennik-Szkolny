@@ -25,7 +25,7 @@ class SchoolDiaryApp:
             "\U0001f4c5": "calendar",
             "\U0001F4DC": "grades",  # Icon for grades
             "\U0001f393": "lessons",
-            "\U0001f465": "users"
+            "\U0001f465": "students"
         }
 
         # Define available icons for each user level
