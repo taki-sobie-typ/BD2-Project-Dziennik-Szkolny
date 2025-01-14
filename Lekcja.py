@@ -101,12 +101,40 @@ class Lekcja:
         )
         print("Lekcja została dodana.")
 
-    def delete_lesson(self, lesson_id):
+    def delete_lesson(self, row_data):
         """
         Usuwa lekcję na podstawie ID lekcji.
         :param lesson_id: ID lekcji do usunięcia.
         """
+        class_name, class_level, subject_name, date, hour_id, teacher_name, teacher_last_name = row_data
+        lesson_id_result = self.db.execute_query(
+            """
+            SELECT l.lekcje_id 
+            FROM lekcje l
+            JOIN klasa k ON l.klasa_id = k.klasa_id
+            JOIN przedmiot p ON l.przedmiot_id = p.przedmiot_id
+            JOIN godziny g ON l.godzinygodzina_id = g.godzina_id
+            JOIN nauczyciel n ON k.nauczyciel_wychowawca_id = n.nauczyciel_id
+            JOIN dane_osobowe dn ON n.dane_osobowe_id = dn.id_dane_osobowe
+            WHERE k.nazwa_klasy = %s
+              AND k.poziom_klasy = %s
+              AND p.nazwa_przedmiotu = %s
+              AND l.data = %s
+              AND g.godzina = %s
+              AND dn.imie = %s
+              AND dn.nazwisko = %s
+            """,
+            (class_name, class_level, subject_name, date, hour_id, teacher_name, teacher_last_name)
+        )
+
         try:
+            # Extracting lesson_id from the result (if there are any results)
+            if lesson_id_result:
+                lesson_id = lesson_id_result[0][0]  # Get the first value from the first tuple
+            else:
+                print(f"Lekcja o podanych danych nie istnieje.")
+                return
+
             # Sprawdzanie, czy lekcja istnieje
             existing_lesson = self.db.execute_query(
                 "SELECT * FROM lekcje WHERE lekcje_id = %s", (lesson_id,)
@@ -130,7 +158,7 @@ class Lekcja:
         :param row_data: Dane lekcji w formacie
                          (class_name, lesson_id, subject_name, date, hour_id, teacher_name, teacher_last_name)
         """
-        class_name, lesson_id, subject_name, date, hour_id, teacher_name, teacher_last_name = row_data
+        class_name, class_level, subject_name, date, hour_id, teacher_name, teacher_last_name = row_data
 
         # Tworzenie okna edycji lekcji
         edit_lesson_window = tk.Toplevel()
@@ -144,6 +172,28 @@ class Lekcja:
             "SELECT dn.imie, dn.nazwisko, n.nauczyciel_id FROM nauczyciel n JOIN dane_osobowe dn ON n.dane_osobowe_id = dn.id_dane_osobowe"
         )
         hours = self.db.execute_query("SELECT godzina_id, godzina FROM godziny")
+        lesson_id_result = self.db.execute_query(
+            """
+            SELECT l.lekcje_id 
+            FROM lekcje l
+            JOIN klasa k ON l.klasa_id = k.klasa_id
+            JOIN przedmiot p ON l.przedmiot_id = p.przedmiot_id
+            JOIN godziny g ON l.godzinygodzina_id = g.godzina_id
+            JOIN nauczyciel n ON k.nauczyciel_wychowawca_id = n.nauczyciel_id
+            JOIN dane_osobowe dn ON n.dane_osobowe_id = dn.id_dane_osobowe
+            WHERE k.nazwa_klasy = %s
+              AND k.poziom_klasy = %s
+              AND p.nazwa_przedmiotu = %s
+              AND l.data = %s
+              AND g.godzina = %s
+              AND dn.imie = %s
+              AND dn.nazwisko = %s
+            """,
+            (class_name, class_level, subject_name, date, hour_id, teacher_name, teacher_last_name)
+        )
+
+        if lesson_id_result:
+            lesson_id = lesson_id_result[0][0]
 
         # Tworzenie formularza z predefiniowanymi wartościami
         class_label = tk.Label(edit_lesson_window, text="Klasa:")
@@ -182,7 +232,8 @@ class Lekcja:
             edit_lesson_window, values=[f"{h[1]}" for h in hours]
         )
         self.hour_combobox.grid(row=4, column=1, padx=10, pady=5)
-        self.hour_combobox.set(next((h[1] for h in hours if h[0] == hour_id), ""))
+        #self.hour_combobox.set(next((h[1] for h in hours if h[0] == hour_id), ""))
+        self.hour_combobox.set(hour_id)
 
         # Przycisk do zatwierdzenia edycji lekcji
         submit_button = tk.Button(
