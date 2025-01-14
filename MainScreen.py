@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, Toplevel
 from PIL import Image, ImageTk
 
 from Lekcja import Lekcja
@@ -45,6 +45,7 @@ class SchoolDiaryApp:
         self.root.title("Dziennik szkolny")
         self.root.geometry("1200x750")
         self.root.config(bg="lightgray")
+        self.root.resizable(False, False)
 
         self.current_frame = None  # To track the currently displayed content
         self.current_view = None  # Track the current view for action buttons
@@ -116,8 +117,8 @@ class SchoolDiaryApp:
 
         if view_name == "lessons":
             self.display_table(self.current_frame, "lekcjeview")
-        elif view_name == "users":
-            self.display_table(self.current_frame, "uczniowie")
+        elif view_name == "students":
+            self.panel_administratora()
         elif view_name == "notifications":
             self.display_announcements(self.current_frame, "ogłoszenieview")
         elif view_name == "grades":
@@ -676,7 +677,7 @@ class SchoolDiaryApp:
                 widget.destroy()
         else:
             # If no buttons_frame exists, create one
-            buttons_frame = tk.Frame(self.main_container, bg="white")
+            buttons_frame = tk.Frame(self.main_container, bg="lightgray")
             buttons_frame.pack(side="bottom", fill="x", pady=10)
 
         # Add buttons based on the current view
@@ -879,5 +880,57 @@ class SchoolDiaryApp:
         # Renderowanie początkowego harmonogramu
         update_schedule()
 
+    def panel_administratora(self):
+        # Create a frame inside the panel for the buttons
+        panel_frame = tk.Frame(self.main_container, bg="white")
+        panel_frame.pack(fill="both", expand=True)
 
+        # Create a container (sub-frame) for the buttons to center them horizontally but position them higher
+        button_frame = tk.Frame(panel_frame, bg="white")
+        button_frame.pack(side="top", pady=50)  # This moves the buttons higher by adding a padding on top
 
+        # Create button data with button text and associated command
+        button_data = [
+            ("Uczniowie", self.open_students_popup),
+            ("Nauczyciele", self.open_teachers_popup),
+            ("Rodzice", self.open_parents_popup),
+            ("Klasy", self.open_classes_popup)
+        ]
+
+        # Place the buttons in a 2x2 grid inside the centered button_frame
+        for index, (text, command) in enumerate(button_data):
+            row = index // 2  # Integer division to get the row (0 or 1)
+            col = index % 2  # Modulo operation to get the column (0 or 1)
+            button = tk.Button(button_frame, text=text, font=("Arial", 16), width=20, height=3, command=command)
+            button.grid(row=row, column=col, padx=10, pady=10)  # Place the button in the grid
+
+    def open_students_popup(self):
+        popup = Toplevel(self.root)
+        popup.title("Uczniowie")
+        popup.geometry("300x200")  # Adjust the size as needed
+        label = tk.Label(popup, text="Panel Uczniów", font=("Arial", 14))
+        label.pack(pady=50)
+        # Add more widgets or functionality to this popup as needed
+
+    def open_teachers_popup(self):
+        popup = Toplevel(self.root)
+        popup.title("Nauczyciele")
+        popup.geometry("300x200")
+        label = tk.Label(popup, text="Panel Nauczycieli", font=("Arial", 14))
+        label.pack(pady=50)
+        # Add more widgets or functionality to this popup as needed
+
+    def open_parents_popup(self):
+        popup = Toplevel(self.root)
+        popup.title("Rodzice")
+        popup.geometry("300x200")
+        label = tk.Label(popup, text="Panel Rodziców", font=("Arial", 14))
+        label.pack(pady=50)
+        # Add more widgets or functionality to this popup as needed
+
+    def open_classes_popup(self):
+        popup = Toplevel(self.root)
+        popup.title("Klasy")
+        popup.geometry("300x200")
+        label = tk.Label(popup, text="Panel Klas", font=("Arial", 14))
+        label.pack(pady=50)
