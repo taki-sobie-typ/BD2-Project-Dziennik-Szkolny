@@ -9,6 +9,7 @@ class MainApp:
         self.db = db
         self.root.title("Dziennik Szkolny")
         self.root.geometry("1200x700")
+        #self.root.resizable(False, False)
 
         # Initialize the menu bar
         self.menu_bar = None
@@ -33,7 +34,7 @@ class MainApp:
 
         # Update the database connection based on the user level
         if user_level == 3:  # Administrator
-            self.db = DatabaseConnection(user="root", password="", host="localhost", database="szkola")
+            self.db = DatabaseConnection(user="szkolaAdmin", password="strongpassword", host="localhost", database="szkola")
         elif user_level == 2:  # Teacher
             self.db = DatabaseConnection(user="nauczyciel", password="strongpassword", host="localhost", database="szkola")
         elif user_level == 1:  # Parent

@@ -21,19 +21,19 @@ class SchoolDiaryApp:
 
         self.icons = {
             "\u2709": "messages",
-            "\U0001f393": "lessons",
             "\U0001f514": "notifications",
             "\U0001f4c5": "calendar",
-            "\U0001f465": "users",
-            "\U0001F4DC": "grades"  # Icon for grades
+            "\U0001F4DC": "grades",  # Icon for grades
+            "\U0001f393": "lessons",
+            "\U0001f465": "users"
         }
 
         # Define available icons for each user level
         self.icon_sets = {
-            3: ["\u2709", "\U0001f393", "\U0001f514", "\U0001f4c5", "\U0001F4DC", "\U0001f465"],  # Administrator
-            2: ["\u2709", "\U0001f393", "\U0001f514", "\U0001f4c5", "\U0001F4DC"],  # Teacher
-            1: ["\u2709", "\U0001f514", "\U0001f465", "\U0001F4DC"],  # Parent
-            0: ["\u2709", "\U0001f514", "\U0001f465", "\U0001F4DC"],  # Student
+            3: ["\u2709", "\U0001f514", "\U0001f4c5", "\U0001F4DC", "\U0001f393", "\U0001f465"],  # Administrator
+            2: ["\u2709", "\U0001f514", "\U0001f4c5", "\U0001F4DC", "\U0001f393"],  # Teacher
+            1: ["\u2709", "\U0001f514", "\U0001f4c5", "\U0001F4DC"],  # Parent
+            0: ["\u2709", "\U0001f514", "\U0001f4c5", "\U0001F4DC"],  # Student
         }
 
 
@@ -45,7 +45,6 @@ class SchoolDiaryApp:
         self.root.title("Dziennik szkolny")
         self.root.geometry("1200x750")
         self.root.config(bg="lightgray")
-        self.root.resizable(False, False)
 
         self.current_frame = None  # To track the currently displayed content
         self.current_view = None  # Track the current view for action buttons
