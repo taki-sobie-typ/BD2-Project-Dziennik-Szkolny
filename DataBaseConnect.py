@@ -439,6 +439,75 @@ class DatabaseConnection:
             return []  # Return empty list on error
 
 
+def add_personal_data(self, imie, nazwisko, data_urodzenia, numer_kontaktowy, id_adres_zamieszkania, plec):
+    """
+    Add personal data to the database.
+    """
+    try:
+        query = """
+            INSERT INTO dane_osobowe (imie, nazwisko, data_urodzenia, numer_kontaktowy, id_adres_zamieszkania, plec)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        self.cursor.execute(query, (imie, nazwisko, data_urodzenia, numer_kontaktowy, id_adres_zamieszkania, plec))
+        self.connection.commit()
+        return self.cursor.lastrowid  # Return the ID of the inserted row
+    except mysql.connector.Error as err:
+        print(f"Error adding personal data: {err}")
+        return None
+
+def add_address(self, street, city, postal_code, country):
+    """
+    Add address to the database.
+    """
+    try:
+        query = """
+            INSERT INTO adres_zamieszkania (ulica, miasto, kod_pocztowy, kraj)
+            VALUES (%s, %s, %s, %s)
+        """
+        self.cursor.execute(query, (street, city, postal_code, country))
+        self.connection.commit()
+        return self.cursor.lastrowid
+    except mysql.connector.Error as err:
+        print(f"Error adding address: {err}")
+        return None
+
+def add_user(self, name, passwd, email):
+    """
+    Add address to the database.
+    """
+    try:
+        query = """
+            INSERT INTO uzytkownik(nazwa_uzytkownika, haslo, email)
+            VALUES (%s, %s, %s)
+        """
+        self.cursor.execute(query, (name, passwd, email))
+        self.connection.commit()
+        return self.cursor.lastrowid
+    except mysql.connector.Error as err:
+        print(f"Error adding address: {err}")
+        return None
+
+def add_role(self, user_id, role, dane_osobowe_id):
+    """
+    Add a specific role (uczen, nauczyciel, rodzic) to the database.
+    """
+    try:
+        if role == "uczen":
+            query = "INSERT INTO uczen (id_uzytkownik, dane_osobowe_id) VALUES (%s, %s)"
+        elif role == "nauczyciel":
+            query = "INSERT INTO nauczyciel (id_uzytkownik, dane_osobowe_id) VALUES (%s, %s)"
+        elif role == "rodzic":
+            query = "INSERT INTO rodzic (id_uzytkownik, dane_osobowe_id, opiekun_prawny) VALUES (%s, %s, %s)"
+        else:
+            print("Invalid role specified.")
+            return
+
+        self.cursor.execute(query, (user_id, dane_osobowe_id))
+        self.connection.commit()
+        print(f"Added role '{role}' for user ID {user_id}.")
+    except mysql.connector.Error as err:
+        print(f"Error adding role: {err}")
+
 
 
 
