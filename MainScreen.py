@@ -585,7 +585,7 @@ class SchoolDiaryApp:
                     checkbox_var = tk.BooleanVar()
                     checkbox = tk.Checkbutton(
                         title_frame, variable=checkbox_var, bg="white", selectcolor="lightgray",
-                        command=lambda idx=index, var=checkbox_var: toggle_selection(idx, var)
+                        command=lambda idx=ogloszenie_id, var=checkbox_var: toggle_selection(idx, var)
                     )
                     checkbox.pack(side="left", padx=5)
 
@@ -900,11 +900,87 @@ class SchoolDiaryApp:
 
     def open_students_popup(self):
         popup = Toplevel(self.root)
-        popup.title("Uczniowie")
-        popup.geometry("300x200")  # Adjust the size as needed
-        label = tk.Label(popup, text="Panel Uczniów", font=("Arial", 14))
-        label.pack(pady=50)
-        # Add more widgets or functionality to this popup as needed
+        popup.title("Dodaj Nowego Ucznia")
+        popup.geometry("400x800")  # Adjusted size for input fields
+
+        # Add a title label
+        title_label = tk.Label(popup, text="Dodaj Nowego Ucznia", font=("Arial", 16, "bold"))
+        title_label.pack(pady=10)
+
+        # Create labels and entry fields for student data
+        labels_and_fields = [
+            ("Imię:", "imie"),
+            ("Nazwisko:", "nazwisko"),
+            ("Data urodzenia (YYYY-MM-DD):", "data_urodzenia"),
+            ("Numer kontaktowy:", "numer_kontaktowy"),
+            ("Adres zamieszkania (ulica, miasto, kod pocztowy, kraj):", "adres"),
+            ("Numer budynku:", "numer_budynku"),
+            ("Numer mieszkania:", "numer_mieszkania"),
+            ("Płeć (M/F):", "plec"),
+            ("Nazwa użytkownika:", "nazwa_uzytkownika"),
+            ("Hasło:", "haslo"),
+            ("Email:", "email"),
+        ]
+
+        input_fields = {}  # Dictionary to store input field references
+
+        for text, field_name in labels_and_fields:
+            label = tk.Label(popup, text=text, font=("Arial", 12))
+            label.pack(anchor="w", padx=10, pady=5)
+            entry = tk.Entry(popup, font=("Arial", 12))
+            entry.pack(fill="x", padx=10, pady=5)
+            input_fields[field_name] = entry  # Save entry field in the dictionary
+
+        # Submit button
+        def submit_student_data():
+            # Retrieve data from input fields
+            try:
+                imie = input_fields["imie"].get()
+                nazwisko = input_fields["nazwisko"].get()
+                data_urodzenia = input_fields["data_urodzenia"].get()
+                numer_kontaktowy = input_fields["numer_kontaktowy"].get()
+                adres = input_fields["adres"].get()
+                numer_budynku = input_fields["numer_budynku"].get()
+                numer_mieszkania = input_fields["numer_mieszkania"].get()
+                plec = input_fields["plec"].get()
+                nazwa_uzytkownika = input_fields["nazwa_uzytkownika"].get()
+                haslo = input_fields["haslo"].get()
+                email = input_fields["email"].get()
+
+                # Split address fields
+                ulica, miasto, kod_pocztowy, kraj = adres.split(", ")
+
+                # Insert data in correct order
+                id_adres = self.add_address(numer_budynku, numer_mieszkania, ulica, miasto, kod_pocztowy)
+                if not id_adres:
+                    raise ValueError("Błąd podczas dodawania adresu.")
+
+                id_dane_osobowe = self.add_personal_data(
+                    imie, nazwisko, data_urodzenia, numer_kontaktowy, id_adres, plec
+                )
+                if not id_dane_osobowe:
+                    raise ValueError("Błąd podczas dodawania danych osobowych.")
+
+                id_uzytkownik = self.add_user(nazwa_uzytkownika, haslo, email)
+                if not id_uzytkownik:
+                    raise ValueError("Błąd podczas dodawania użytkownika.")
+
+                self.add_role(id_uzytkownik, "uczen", id_dane_osobowe)
+                print(f"Uczeń '{imie} {nazwisko}' został pomyślnie dodany.")
+                popup.destroy()
+
+            except Exception as e:
+                print(f"Błąd: {e}")
+
+        submit_button = tk.Button(
+            popup, text="Dodaj Ucznia", font=("Arial", 12, "bold"), bg="green", fg="white",
+            command=submit_student_data
+        )
+        submit_button.pack(pady=20)
+
+        # Close button
+        close_button = tk.Button(popup, text="Zamknij", font=("Arial", 12), command=popup.destroy)
+        close_button.pack(pady=10)
 
     def open_teachers_popup(self):
         popup = Toplevel(self.root)

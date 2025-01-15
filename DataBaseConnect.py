@@ -455,16 +455,16 @@ def add_personal_data(self, imie, nazwisko, data_urodzenia, numer_kontaktowy, id
         print(f"Error adding personal data: {err}")
         return None
 
-def add_address(self, street, city, postal_code, country):
+def add_address(self, numer_budynku, numer_mieszkania, ulica, miasto, id_kodu_pocztowe):
     """
     Add address to the database.
     """
     try:
         query = """
-            INSERT INTO adres_zamieszkania (ulica, miasto, kod_pocztowy, kraj)
+            INSERT INTO adres_zamieszkania (numer_budynku, numer_mieszkania, ulica, miasto, id_kodu_pocztowe)
             VALUES (%s, %s, %s, %s)
         """
-        self.cursor.execute(query, (street, city, postal_code, country))
+        self.cursor.execute(query, (numer_budynku, numer_mieszkania, ulica, miasto, id_kodu_pocztowe))
         self.connection.commit()
         return self.cursor.lastrowid
     except mysql.connector.Error as err:
@@ -476,11 +476,14 @@ def add_user(self, name, passwd, email):
     Add address to the database.
     """
     try:
+        # Hash the password using bcrypt
+        hashed_password = bcrypt.hashpw(passwd.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
         query = """
             INSERT INTO uzytkownik(nazwa_uzytkownika, haslo, email)
             VALUES (%s, %s, %s)
         """
-        self.cursor.execute(query, (name, passwd, email))
+        self.cursor.execute(query, (name, hashed_password, email))
         self.connection.commit()
         return self.cursor.lastrowid
     except mysql.connector.Error as err:
